@@ -1,0 +1,39 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - recommend_movie
+  - search_by_person
+  - out_of_scope     # <--- Add this
+  - nlu_fallback
+
+entities:
+  - genre
+  - actor
+  - director
+
+slots:
+  genre:
+    type: text
+    mappings: [{ type: from_entity, entity: genre }]
+  actor:
+    type: text
+    mappings: [{ type: from_entity, entity: actor }]
+  director:
+    type: text
+    mappings: [{ type: from_entity, entity: director }]
+
+actions:
+  - action_movie_search
+
+responses:
+  utter_greet:
+    - text: "Hello! I can help you find movies by genre, actor, or director. What are you in the mood for?"
+  utter_goodbye:
+    - text: "Enjoy your movie! Goodbye!"
+  utter_please_rephrase:
+    - text: "I'm sorry, I didn't quite catch that. Could you rephrase? I can help you find movies by genre, actor, or director."
+    - text: "I'm not sure I understand. Could you try saying that differently? For example, 'show me action movies'."
+  utter_out_of_scope:
+    - text: "I'm a movie expert, not a polymath! I can only help you with movie recommendations."

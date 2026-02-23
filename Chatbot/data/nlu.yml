@@ -1,0 +1,31 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey there
+
+- intent: recommend_movie
+  examples: |
+    - suggest me a movie
+    - i want to watch [horror](genre)
+    - find me some [comedy](genre) films
+    - show me [action](genre) movies
+    - any recommendations?
+
+- intent: search_by_person
+  examples: |
+    - movies with [Brad Pitt](actor)
+    - directed by [Christopher Nolan](director)
+    - show me [Tom Cruise](actor) movies
+    - who directed [Inception](movie_title)?
+
+- intent: out_of_scope
+  examples: |
+    - I want to order pizza
+    - what's the weather like?
+    - who is the president?
+    - asdfghjkl
+    - qwerty
