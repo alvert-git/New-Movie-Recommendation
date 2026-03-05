@@ -4,6 +4,10 @@ intents:
   - greet
   - goodbye
   - recommend_movie
+  - recommend_high_budget
+  - recommend_latest
+  - recommend_short_runtime
+  - recommend_by_year
   - search_by_person
   - out_of_scope     # <--- Add this
   - nlu_fallback
@@ -12,6 +16,7 @@ entities:
   - genre
   - actor
   - director
+  - year
 
 slots:
   genre:
@@ -23,6 +28,9 @@ slots:
   director:
     type: text
     mappings: [{ type: from_entity, entity: director }]
+  year:
+    type: text
+    mappings: [{ type: from_entity, entity: year }]
 
 actions:
   - action_movie_search

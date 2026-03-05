@@ -11,6 +11,26 @@ rules:
   - intent: recommend_movie
   - action: action_movie_search
 
+- rule: Handle high budget search
+  steps:
+  - intent: recommend_high_budget
+  - action: action_movie_search
+
+- rule: Handle latest movie search
+  steps:
+  - intent: recommend_latest
+  - action: action_movie_search
+
+- rule: Handle short movie search
+  steps:
+  - intent: recommend_short_runtime
+  - action: action_movie_search
+
+- rule: Handle year movie search
+  steps:
+  - intent: recommend_by_year
+  - action: action_movie_search
+
 - rule: Say goodbye
   steps:
   - intent: goodbye

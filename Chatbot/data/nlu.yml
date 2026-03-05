@@ -15,6 +15,38 @@ nlu:
     - show me [action](genre) movies
     - any recommendations?
 
+- intent: recommend_high_budget
+  examples: |
+    - show me high budget movies
+    - i want to watch expensive movies
+    - high budget movie
+    - movies with a lot of budget
+    - big budget films
+
+- intent: recommend_latest
+  examples: |
+    - what's new
+    - show me recent movies
+    - latest releases
+    - new movies
+    - newest films
+
+- intent: recommend_short_runtime
+  examples: |
+    - show me short movies
+    - movies under 90 minutes
+    - quick watch
+    - short films
+    - movies that are not too long
+
+- intent: recommend_by_year
+  examples: |
+    - movies from [2010](year)
+    - show me films released in [1999](year)
+    - any movies from [2020](year)?
+    - best movies of [2015](year)
+    - [1985](year) movies
+
 - intent: search_by_person
   examples: |
     - movies with [Brad Pitt](actor)

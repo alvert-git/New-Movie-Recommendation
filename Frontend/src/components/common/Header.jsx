@@ -7,12 +7,12 @@ import axios from 'axios';
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [user, setUser] = useState(null);
-  
+
   // Search States
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
-  
+
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
@@ -75,11 +75,10 @@ const Header = () => {
   };
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-black/95 py-3 shadow-2xl' : 'bg-transparent py-5'
-    }`}>
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-black/95 py-3 shadow-2xl' : 'bg-transparent py-5'
+      }`}>
       <div className="container mx-auto px-6 flex items-center justify-between">
-        
+
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-2 cursor-pointer group">
           <Film className="text-red-600 w-8 h-8 group-hover:scale-110 transition-transform" />
@@ -91,20 +90,20 @@ const Header = () => {
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-gray-300 font-medium">
           <Link to="/" className="hover:text-white transition-colors">Home</Link>
-          <Link to="/popular" className="hover:text-white transition-colors">Watch List</Link>
+          <Link to="/watchlist" className="hover:text-white transition-colors">Watch List</Link>
         </nav>
 
         {/* Search and Profile */}
         <div className="flex items-center gap-6">
-          
+
           {/* --- SEARCH BAR --- */}
           <div className="relative hidden lg:block" ref={searchRef}>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setShowResults(true)}
-              placeholder="Search movies..." 
+              placeholder="Search movies..."
               className="bg-zinc-900/80 text-white text-sm rounded-md pl-10 pr-4 py-2 w-64 focus:outline-none focus:ring-1 focus:ring-red-600 transition-all border border-zinc-700"
             />
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -128,14 +127,14 @@ const Header = () => {
               </div>
             )}
           </div>
-          
+
           {/* User Profile / Login Section */}
           <div className="relative group">
             {user ? (
               <div className="flex items-center gap-2 cursor-pointer py-2">
-                <img 
-                  src={user.picture || '/user.png'} 
-                  alt="Profile" 
+                <img
+                  src={user.picture || '/user.png'}
+                  alt="Profile"
                   className="w-8 h-8 rounded-md object-cover border border-zinc-700"
                   onError={(e) => e.target.src = '/user.png'}
                 />
@@ -148,8 +147,8 @@ const Header = () => {
                       <p className="text-xs text-gray-500 uppercase font-bold">Account</p>
                       <p className="text-sm text-white truncate">{user.email}</p>
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-zinc-900 transition-colors"
                     >

@@ -5,13 +5,13 @@ const bcrypt = require('bcrypt');
 // Helper function to create the JWT
 const generateToken = (user) => {
     // Ensure there is a fallback image
-    const defaultPic = `${process.env.VITE_FRONTEND_URL}/user.png`; 
-    
+    const defaultPic = `${process.env.VITE_FRONTEND_URL}/user.png`;
+
     return jwt.sign(
-        { 
-            id: user.id, 
-            email: user.email, 
-            picture: user.profile_pic || defaultPic 
+        {
+            id: user.id,
+            email: user.email,
+            picture: user.profile_pic || defaultPic
         },
         process.env.JWT_SECRET,
         { expiresIn: '1d' }
@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
         // Explicitly set profile_pic as NULL or a default string for local users
         await db.query(
             'INSERT INTO users (email, password_hash, auth_provider, profile_pic) VALUES (?, ?, ?, ?)',
-            [email, hashedPassword, 'local', null] 
+            [email, hashedPassword, 'local', null]
         );
 
         res.status(201).json({ message: "User registered successfully" });
@@ -62,10 +62,10 @@ exports.login = async (req, res) => {
 
         // Generate and send Token
         const token = generateToken(user);
-        res.status(200).json({ 
+        res.status(200).json({
             message: "Login successful",
-            token, 
-            user: { id: user.id, email: user.email } 
+            token,
+            user: { id: user.id, email: user.email }
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -76,9 +76,9 @@ exports.login = async (req, res) => {
 exports.googleCallback = (req, res) => {
     // Passport strategy already verified/created the user and put it in req.user
     const token = generateToken(req.user);
-    
+
     // Pass the token to your frontend via URL parameter
-    res.redirect(`${process.env.VITE_FRONTEND_URL}login-success?token=${token}`);
+    res.redirect(`${process.env.VITE_FRONTEND_URL}/login-success?token=${token}`);
 };
 
 // 4. LOGOUT (JWT)

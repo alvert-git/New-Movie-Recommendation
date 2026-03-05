@@ -6,8 +6,8 @@ const Dashboard = () => {
   return (
     <div className="bg-black min-h-screen">
       {/* <main className="pt-24 container mx-auto px-6 text-white"> */}
-      <Home/>
-    {/* </main> */}
+      <Home />
+      {/* </main> */}
     </div>
   )
 }
