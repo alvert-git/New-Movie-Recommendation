@@ -173,53 +173,84 @@ exports.verifyPayment = async (req, res) => {
                 [payment.id]
             );
 
-            return res.json({ status: "success", movie_id: payment.movie_id });
+            const [movies] = await db.query("SELECT title FROM movies WHERE movie_id = ?", [payment.movie_id]);
+
+            return res.json({
+                status: "success",
+                movie_id: payment.movie_id,
+                movie_title: movies[0]?.title || "Unknown",
+                amount: payment.amount,
+                transaction_id: payment.transaction_uuid,
+                method: payment.payment_method
+            });
 
         } else if (method === 'khalti') {
-            const khaltiTxn = pidx || transaction_id;
-            const movieId = purchase_order_id;
+            const khaltiPidx = pidx || transaction_id;
 
-            if (!khaltiTxn || !movieId) {
-                return res.status(400).json({ error: "Missing Khalti details" });
+            if (!khaltiPidx) {
+                return res.status(400).json({ error: "Missing Khalti pidx" });
             }
 
-            // Verify with Khalti
-            const resKhalti = await fetch(process.env.KHALTI_VERIFY_URL, {
+            // 1. First, check if it's already completed in our DB
+            const [existing] = await db.query(
+                "SELECT * FROM purchases WHERE khalti_pidx = ? AND status = 'COMPLETED'",
+                [khaltiPidx]
+            );
+
+            if (existing.length > 0) {
+                const [movies] = await db.query("SELECT title FROM movies WHERE movie_id = ?", [existing[0].movie_id]);
+                return res.json({
+                    status: "success",
+                    movie_id: existing[0].movie_id,
+                    movie_title: movies[0]?.title || "Unknown",
+                    amount: existing[0].amount,
+                    transaction_id: khaltiPidx,
+                    method: 'khalti'
+                });
+            }
+
+            // 2. If not already completed, verify with Khalti Server
+            const resKhalti = await fetch("https://a.khalti.com/api/v2/epayment/lookup/", {
                 method: "POST",
                 headers: {
                     Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ pidx: khaltiTxn }),
+                body: JSON.stringify({ pidx: khaltiPidx }),
             });
-
-            if (!resKhalti.ok) {
-                return res.status(400).json({ error: "Khalti server verification failed" });
-            }
 
             const json = await resKhalti.json();
 
-            if (json.status !== "Completed" && json.state?.name !== "Completed") {
-                return res.status(400).json({ error: "Payment not completed" });
+            if (json.status !== "Completed") {
+                return res.status(400).json({ error: `Khalti status: ${json.status}` });
             }
 
-            // Find pending
-            const [payments] = await db.query(
-                "SELECT * FROM purchases WHERE movie_id = ? AND khalti_pidx = ? AND status = 'PENDING'",
-                [movieId, khaltiTxn]
+            // 3. Find the PENDING record
+            const [pending] = await db.query(
+                "SELECT * FROM purchases WHERE khalti_pidx = ? AND status = 'PENDING'",
+                [khaltiPidx]
             );
 
-            if (payments.length === 0) {
-                return res.status(404).json({ error: "Valid pending payment not found" });
+            if (pending.length === 0) {
+                return res.status(404).json({ error: "No matching pending payment found." });
             }
 
-            // Update
+            // 4. Update to COMPLETED
             await db.query(
                 "UPDATE purchases SET status = 'COMPLETED' WHERE id = ?",
-                [payments[0].id]
+                [pending[0].id]
             );
 
-            return res.json({ status: "success", movie_id: payments[0].movie_id });
+            const [movieInfo] = await db.query("SELECT title FROM movies WHERE movie_id = ?", [pending[0].movie_id]);
+
+            return res.json({
+                status: "success",
+                movie_id: pending[0].movie_id,
+                movie_title: movieInfo[0]?.title || "Unknown",
+                amount: pending[0].amount,
+                transaction_id: khaltiPidx,
+                method: 'khalti'
+            });
         }
 
         return res.status(400).json({ error: "Invalid method" });

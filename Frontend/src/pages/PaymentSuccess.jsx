@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { CheckCircle, XCircle, Loader } from 'lucide-react';
+import { CheckCircle, XCircle, Loader, ArrowRight } from 'lucide-react';
 
 const PaymentSuccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
     const [message, setMessage] = useState('Verifying your payment...');
+    const [paymentDetails, setPaymentDetails] = useState(null);
 
     useEffect(() => {
         // ALWAYS LOG THE RAW URL TO CONSOLE
@@ -66,11 +67,8 @@ const PaymentSuccess = () => {
 
                 if (res.data.status === 'success') {
                     setStatus('success');
-                    setMessage('Payment verified successfully! Redirecting...');
-                    // Redirect to the movie page after a short delay
-                    setTimeout(() => {
-                        navigate(`/movie/${res.data.movie_id}/watch`); // Or just back to movie details
-                    }, 3000);
+                    setMessage('Payment verified successfully!');
+                    setPaymentDetails(res.data);
                 } else {
                     setStatus('error');
                     setMessage('Payment verification failed.');
@@ -98,16 +96,41 @@ const PaymentSuccess = () => {
                     </div>
                 )}
 
-                {status === 'success' && (
-                    <div className="flex flex-col items-center">
+                {status === 'success' && paymentDetails && (
+                    <div className="flex flex-col items-center w-full">
                         <CheckCircle className="w-16 h-16 text-green-500 mb-6" />
                         <h2 className="text-2xl font-bold text-white mb-2">Payment Successful!</h2>
-                        <p className="text-gray-400 mb-6">Enjoy your movie!</p>
+                        <p className="text-gray-400 mb-6 font-medium">Enjoy your movie!</p>
+
+                        {/* Receipt UI */}
+                        <div className="bg-gray-800/50 border border-gray-700 w-full rounded-xl p-6 mb-8 text-left shadow-inner">
+                            <h3 className="text-lg font-bold text-white mb-4 border-b border-gray-700 pb-2">Transaction Receipt</h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-gray-400 text-sm whitespace-nowrap">Movie</span>
+                                    <span className="font-semibold text-white text-right break-words">{paymentDetails.movie_title}</span>
+                                </div>
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-gray-400 text-sm whitespace-nowrap">Payment Method</span>
+                                    <span className="font-semibold text-white capitalize">{paymentDetails.method === 'esewa' ? "eSewa" : "Khalti"}</span>
+                                </div>
+                                <div className="flex justify-between items-center gap-4">
+                                    <span className="text-gray-400 text-sm whitespace-nowrap">Transaction ID</span>
+                                    <span className="font-mono text-xs text-gray-400 break-all text-right">{paymentDetails.transaction_id}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-4 border-t border-gray-700 font-bold text-lg mt-2">
+                                    <span className="text-gray-300">Total Paid</span>
+                                    <span className="text-green-400">NPR {paymentDetails.amount}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <button
-                            onClick={() => navigate('/')}
-                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full transition-colors w-full"
+                            onClick={() => navigate(`/movie/${paymentDetails.movie_id}/${encodeURIComponent(paymentDetails.movie_title)}`)}
+                            className="bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-2 font-bold py-3 px-6 rounded-full transition-all shadow-lg hover:shadow-red-600/20 w-full group"
                         >
-                            Go to Home
+                            Watch Movie Now
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
                     </div>
                 )}
