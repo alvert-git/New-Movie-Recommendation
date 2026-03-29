@@ -91,6 +91,9 @@ const Header = () => {
         <nav className="hidden md:flex items-center gap-8 text-gray-300 font-medium">
           <Link to="/" className="hover:text-white transition-colors">Home</Link>
           <Link to="/watchlist" className="hover:text-white transition-colors">Watch List</Link>
+          {user && (JSON.parse(localStorage.getItem('user') || '{}').role === 'admin') && (
+            <Link to="/admin" className="text-red-500 hover:text-white transition-colors font-bold">Admin Panel</Link>
+          )}
         </nav>
 
         {/* Search and Profile */}

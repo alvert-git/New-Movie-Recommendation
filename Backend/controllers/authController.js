@@ -11,6 +11,7 @@ const generateToken = (user) => {
         {
             id: user.id,
             email: user.email,
+            role: user.role,
             picture: user.profile_pic || defaultPic
         },
         process.env.JWT_SECRET,
@@ -60,12 +61,11 @@ exports.login = async (req, res) => {
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
-        // Generate and send Token
         const token = generateToken(user);
         res.status(200).json({
             message: "Login successful",
             token,
-            user: { id: user.id, email: user.email }
+            user: { id: user.id, email: user.email, role: user.role }
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

@@ -282,3 +282,18 @@ exports.checkAccess = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.getEarnings = async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            "SELECT SUM(amount) as totalEarnings, COUNT(*) as totalTransactions FROM purchases WHERE status = 'COMPLETED'"
+        );
+        res.json({
+            totalEarnings: rows[0].totalEarnings || 0,
+            totalTransactions: rows[0].totalTransactions || 0
+        });
+    } catch (error) {
+        console.error("Earnings error:", error);
+        res.status(500).json({ error: "Failed to fetch earnings" });
+    }
+};

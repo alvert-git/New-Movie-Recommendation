@@ -42,7 +42,7 @@ passport.use(new GoogleStrategy({
             [email, googleId, 'google', photo]
         );
         
-        const newUser = { id: result.insertId, email, google_id: googleId, profile_pic: photo };
+        const newUser = { id: result.insertId, email, google_id: googleId, profile_pic: photo, role: 'user' };
         return done(null, newUser);
         
     } catch (err) {

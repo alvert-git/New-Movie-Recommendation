@@ -59,6 +59,7 @@ Modal/similarity.pkl
 *.pkl
 *.joblib
 *.model
+*.scaler
 *.h5
 *.hdf5
 models/

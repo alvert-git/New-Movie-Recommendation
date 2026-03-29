@@ -124,3 +124,87 @@ exports.getRecommendations = async (req, res) => {
     }
 };
 
+exports.createMovie = async (req, res) => {
+    try {
+        const { title, tagline, overview, runtime, release_date, budget, price, genres, cast, crew } = req.body;
+        
+        let poster_url = null;
+        let backdrop_url = null;
+
+        if (req.files) {
+            if (req.files.poster) poster_url = `/uploads/posters/${req.files.poster[0].filename}`;
+            if (req.files.backdrop) backdrop_url = `/uploads/backdrops/${req.files.backdrop[0].filename}`;
+        }
+        
+        const moviePrice = price || 9.99;
+        const movie_id = Math.floor(Math.random() * 1000000000); // Generate a unique ID
+        
+        const tagsRaw = `${overview || ''} ${genres || ''} ${cast || ''} ${crew || ''}`;
+        const tags = tagsRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+
+        const sql = `INSERT INTO movies 
+            (movie_id, title, tagline, overview, runtime, release_date, budget, price, poster_url, backdrop_url, genres, cast, crew, tags) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            
+        const values = [movie_id, title, tagline, overview, runtime, release_date, budget, moviePrice, poster_url, backdrop_url, genres, cast, crew, tags];
+        
+        await db.query(sql, values);
+
+        axios.post('http://127.0.0.1:5000/rebuild-recommendations').catch(err => console.log('Rebuild error:', err.message));
+
+        res.status(201).json({ message: "Movie created successfully", movie_id });
+    } catch (error) {
+        console.error("Create movie error:", error);
+        res.status(500).json({ error: "Failed to create movie" });
+    }
+};
+
+exports.updateMovie = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, tagline, overview, runtime, release_date, budget, price, genres, cast, crew } = req.body;
+        
+        const [existing] = await db.query("SELECT * FROM movies WHERE movie_id = ?", [id]);
+        if (existing.length === 0) return res.status(404).json({ error: "Movie not found" });
+
+        let poster_url = existing[0].poster_url;
+        let backdrop_url = existing[0].backdrop_url;
+
+        if (req.files) {
+            if (req.files.poster) poster_url = `/uploads/posters/${req.files.poster[0].filename}`;
+            if (req.files.backdrop) backdrop_url = `/uploads/backdrops/${req.files.backdrop[0].filename}`;
+        }
+
+        const tagsRaw = `${overview || ''} ${genres || ''} ${cast || ''} ${crew || ''}`;
+        const tags = tagsRaw.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+
+        const sql = `UPDATE movies SET 
+            title=?, tagline=?, overview=?, runtime=?, release_date=?, budget=?, price=?, 
+            poster_url=?, backdrop_url=?, genres=?, cast=?, crew=?, tags=? 
+            WHERE movie_id=?`;
+
+        const values = [title, tagline, overview, runtime, release_date, budget, price || 9.99, poster_url, backdrop_url, genres, cast, crew, tags, id];
+        
+        await db.query(sql, values);
+
+        axios.post('http://127.0.0.1:5000/rebuild-recommendations').catch(err => console.log('Rebuild error:', err.message));
+
+        res.json({ message: "Movie updated successfully" });
+    } catch (error) {
+        console.error("Update movie error:", error);
+        res.status(500).json({ error: "Failed to update movie" });
+    }
+};
+
+exports.deleteMovie = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query("DELETE FROM movies WHERE movie_id = ?", [id]);
+        
+        axios.post('http://127.0.0.1:5000/rebuild-recommendations').catch(err => console.log('Rebuild error:', err.message));
+        
+        res.json({ message: "Movie deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete movie" });
+    }
+};

@@ -10,6 +10,8 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import Watchlist from "./pages/Watchlist";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
+import AdminProtectedRoute from "./components/layout/AdminProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const App = () => {
   return (
@@ -27,6 +29,9 @@ const App = () => {
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failure" element={<PaymentFailure />} />
+          </Route>
+          <Route element={<AdminProtectedRoute />}>
+             <Route path="/admin" element={<AdminDashboard />} />
           </Route>
         </Route>
       </Routes>

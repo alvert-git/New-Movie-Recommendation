@@ -5,6 +5,9 @@ import pandas as pd
 import nltk
 from nltk.corpus import stopwords
 import re
+import mysql.connector
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # Download stopwords for the cleaning function
 nltk.download('stopwords')
@@ -90,6 +93,45 @@ def predict_sentiment():
 
     except Exception as e:
         print(f"❌ Sentiment Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/rebuild-recommendations', methods=['POST'])
+def rebuild_recommendations():
+    global movies, similarity
+    try:
+        conn = mysql.connector.connect(
+            host='localhost',
+            user='root',
+            password='',
+            database='movie_recommend'
+        )
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT movie_id, title, tags FROM movies")
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            return jsonify({"message": "No movies found to build recommendations"}), 200
+
+        df = pd.DataFrame(rows)
+        df['tags'] = df['tags'].fillna('')
+
+        cv = CountVectorizer(max_features=5000, stop_words='english')
+        vectors = cv.fit_transform(df['tags']).toarray()
+        
+        new_similarity = cosine_similarity(vectors)
+
+        movies = df
+        similarity = new_similarity
+
+        pickle.dump(similarity, open('similarity.pkl', 'wb'))
+        df.to_csv('movies_to_db.csv', index=False)
+
+        print("✅ Successfully rebuilt recommendation matrices from database!")
+        return jsonify({"message": "Rebuild successful", "movies_count": len(df)}), 200
+
+    except Exception as e:
+        print(f"❌ Rebuild Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
