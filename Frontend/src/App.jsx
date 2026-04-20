@@ -31,7 +31,7 @@ const App = () => {
             <Route path="/payment/failure" element={<PaymentFailure />} />
           </Route>
           <Route element={<AdminProtectedRoute />}>
-             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
           </Route>
         </Route>
       </Routes>

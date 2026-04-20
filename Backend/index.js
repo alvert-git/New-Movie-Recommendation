@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
 const watchlistRoutes = require('./routes/watchlistRoutes')
 const paymentRoutes = require('./routes/paymentRoutes')
+const userRoutes = require('./routes/userRoutes')
 const session = require('express-session');
 const passport = require('passport');
 require('./config/passport');
@@ -31,6 +32,7 @@ app.use('/api/reviews', reviewRoutes)
 app.use('/api/auth', authRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/user', userRoutes);
 
 
 

@@ -33,30 +33,37 @@ const MovieDetails = () => {
           fetch(`http://localhost:9000/api/movies/recommend?title=${encodeURIComponent(title)}`),
         ]);
 
+        if (!movieRes.ok) throw new Error("Movie fetch failed");
+
         const movieData = await movieRes.json();
         const recData = await recRes.json();
 
         setMovie(movieData);
         setRecommendations(recData);
+        setLoading(false); // SUCCESS: Stop loading here
+        setCheckingAccess(false);
 
+        // SUCCESS: Now log the interaction
         const token = localStorage.getItem('token');
         if (token && movieData?.movie_id) {
-          try {
-            const watchRes = await api.get(`/watchlist/check/${movieData.movie_id}`);
-            setInWatchlist(watchRes.data.inWatchlist);
+          api.post('/user/interaction', {
+            movie_id: movieData.movie_id,
+            interaction_type: 'VIEW'
+          }).catch(err => console.error("Interaction logging failed:", err));
 
-            const accessRes = await api.get(`/payment/access/${movieData.movie_id}`);
-            setHasAccess(accessRes.data.hasAccess);
-            if (accessRes.data.hasAccess && accessRes.data.video_url) {
-              setMovie(prev => ({ ...prev, video_url: accessRes.data.video_url }));
-            }
-          } catch (err) {
-            console.error("Failed to check status:", err);
+          // Check Watchlist and Access
+          const [watchRes, accessRes] = await Promise.all([
+            api.get(`/watchlist/check/${movieData.movie_id}`),
+            api.get(`/payment/access/${movieData.movie_id}`)
+          ]);
+          setInWatchlist(watchRes.data.inWatchlist);
+          setHasAccess(accessRes.data.hasAccess);
+          if (accessRes.data.hasAccess && accessRes.data.video_url) {
+            setMovie(prev => ({ ...prev, video_url: accessRes.data.video_url }));
           }
         }
       } catch (err) {
         console.error("Error loading movie page:", err);
-      } finally {
         setLoading(false);
         setCheckingAccess(false);
       }

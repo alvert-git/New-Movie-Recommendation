@@ -16,6 +16,17 @@ stop_words = set(stopwords.words('english'))
 app = Flask(__name__)
 CORS(app)
 
+# --- DATABASE CONFIG ---
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',
+    'database': 'movie_recommend'
+}
+
+def get_db_connection():
+    return mysql.connector.connect(**DB_CONFIG)
+
 # --- LOAD MODELS & DATA ---
 print("🚀 AI Server starting... loading models...")
 try:
@@ -37,6 +48,27 @@ def clean_review(review):
     # Standardize to lowercase and remove stopwords to match training logic
     text = ' '.join(word for word in review.split() if word.lower() not in stop_words)
     return text
+
+# --- HELPER: GET TRENDING ---
+def get_trending_ids(limit=5):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT m.movie_id, COALESCE(p.purchase_count, 0) as p_count 
+            FROM movies m 
+            LEFT JOIN (SELECT movie_id, COUNT(*) as purchase_count FROM purchases WHERE status = 'COMPLETED' GROUP BY movie_id) p 
+            ON m.movie_id = p.movie_id 
+            ORDER BY p_count DESC, m.id ASC 
+            LIMIT %s
+        """
+        cursor.execute(query, (limit,))
+        ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return ids
+    except Exception as e:
+        print(f"Error fetching trending: {e}")
+        return []
 
 # --- ROUTE: RECOMMENDATION ---
 @app.route('/recommend', methods=['GET'])
@@ -62,6 +94,79 @@ def recommend():
         return jsonify({"error": "Movie not found in database"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# --- ROUTE: PERSONALIZED RECOMMENDATION ---
+@app.route('/recommend/personalized', methods=['POST'])
+def personalized_recommend():
+    data = request.json
+    user_id = data.get('user_id')
+    
+    if not user_id:
+        return jsonify({"error": "No user_id provided"}), 400
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # 1. Fetch user interactions
+        cursor.execute("SELECT movie_id, interaction_type FROM user_interactions WHERE user_id = %s", (user_id,))
+        interactions = cursor.fetchall()
+        
+        if not interactions:
+            conn.close()
+            return jsonify({"recommendations": get_trending_ids()})
+
+        # 2. Define weights
+        weights = {'PURCHASE': 5, 'WATCHLIST': 4, 'VIEW': 1}
+        
+        movie_scores = {} # index -> cumulative score
+        interacted_movie_ids = set([int(i['movie_id']) for i in interactions])
+        
+        # 3. Calculate scores based on content similarity
+        # Iterate over each interaction to find similar movies
+        for interact in interactions:
+            m_id = int(interact['movie_id'])
+            m_type = interact['interaction_type']
+            weight = weights.get(m_type, 1)
+            
+            # Find index of this movie in the 'movies' DataFrame
+            match = movies[movies['movie_id'] == m_id]
+            if match.empty:
+                continue
+            idx = match.index[0]
+            
+            # Get similarity scores for this index
+            sim_scores = similarity[idx]
+            
+            # Apply weights to similarity scores
+            for i, score in enumerate(sim_scores):
+                if i not in movie_scores:
+                    movie_scores[i] = 0
+                movie_scores[i] += score * weight
+        
+        conn.close()
+        
+        # 4. Sort by score
+        sorted_indices = sorted(movie_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # 5. Filter out already interacted movies and limit results
+        recommended_ids = []
+        for i, score in sorted_indices:
+            movie_id = int(movies.iloc[i].movie_id)
+            if movie_id not in interacted_movie_ids:
+                recommended_ids.append(movie_id)
+            if len(recommended_ids) >= 5:
+                break
+                
+        return jsonify({"recommendations": recommended_ids})
+
+    except Exception as e:
+        print(f"❌ Personalized Rec Error: {str(e)}")
+        return jsonify({"recommendations": get_trending_ids()})
+
+@app.route('/trending', methods=['GET'])
+def trending_route():
+    return jsonify({"recommendations": get_trending_ids()})
 
 # --- ROUTE: SENTIMENT ANALYSIS ---
 @app.route('/predict-sentiment', methods=['POST'])
