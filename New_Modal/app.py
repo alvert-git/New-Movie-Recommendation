@@ -34,10 +34,9 @@ try:
     movies = pd.read_csv('movies_to_db.csv')
     similarity = pickle.load(open('similarity.pkl', 'rb'))
 
-    # Sentiment Analysis Models (Based on your training code)
-    # Ensure 'model.pkl' and 'scaler.pkl' are in the same folder
-    sentiment_model = pickle.load(open('model.pkl', 'rb'))
-    tfidf = pickle.load(open('scaler.pkl', 'rb')) 
+    # Sentiment Analysis Models (Improved Version)
+    sentiment_model = pickle.load(open('model_v2.pkl', 'rb'))
+    tfidf = pickle.load(open('vectorizer_v2.pkl', 'rb')) 
     
     print("✅ AI Models (Recommendation + Sentiment) ready!")
 except Exception as e:
@@ -45,8 +44,10 @@ except Exception as e:
 
 # --- PREPROCESSING FUNCTION ---
 def clean_review(review):
-    # Standardize to lowercase and remove stopwords to match training logic
-    text = ' '.join(word for word in review.split() if word.lower() not in stop_words)
+    """Clean the text to match the preprocessing used in v2 training."""
+    text = re.sub(r"<.*?>", "", review)   # remove HTML tags
+    text = re.sub(r"[^a-zA-Z]", " ", text)  # keep only letters
+    text = text.lower()
     return text
 
 # --- HELPER: GET TRENDING ---
@@ -181,19 +182,26 @@ def predict_sentiment():
         # 1. Clean the incoming text (Crucial for accuracy)
         cleaned_text = clean_review(review_text)
         
-        # 2. Transform using the LOADED TfidfVectorizer
-        # We use .transform(), NOT .fit_transform()
+        # 2. Get probabilities
         vectorized_text = tfidf.transform([cleaned_text]).toarray()
+        proba = sentiment_model.predict_proba(vectorized_text)[0]
+        pos_proba = proba[1]
         
-        # 3. Predict (1 for Pos, 0 for Neg)
-        prediction = sentiment_model.predict(vectorized_text)[0]
-        
-        # Convert 1/0 back to text label if you prefer
-        result = "pos" if prediction == 1 else "neg"
+        # 3. Determine Sentiment (1 for Pos, 0 for Neg, 2 for Neutral)
+        if 0.35 <= pos_proba <= 0.65:
+            result = "neutral"
+            label = 2
+        elif pos_proba > 0.65:
+            result = "pos"
+            label = 1
+        else:
+            result = "neg"
+            label = 0
 
         return jsonify({
             "sentiment": result,
-            "label": int(prediction)
+            "label": label,
+            "confidence": float(pos_proba if label == 1 else (1 - pos_proba if label == 0 else max(pos_proba, 1-pos_proba)))
         })
 
     except Exception as e:

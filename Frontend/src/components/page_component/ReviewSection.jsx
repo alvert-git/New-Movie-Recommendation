@@ -16,11 +16,14 @@ const ReviewSection = ({ movieId, onReviewChange }) => {
 
   const hasReviewed = reviews.some(r => Number(r.user_id) === Number(user?.id));
 
-  // --- SUMMARY CALCULATIONS ---
   const totalReviews = reviews.length;
   const positiveCount = reviews.filter(r => r.sentiment === 'pos').length;
   const negativeCount = reviews.filter(r => r.sentiment === 'neg').length;
+  const neutralCount = reviews.filter(r => r.sentiment === 'neutral').length;
+  
   const positivePercent = totalReviews > 0 ? Math.round((positiveCount / totalReviews) * 100) : 0;
+  const negativePercent = totalReviews > 0 ? Math.round((negativeCount / totalReviews) * 100) : 0;
+  const neutralPercent = totalReviews > 0 ? Math.round((neutralCount / totalReviews) * 100) : 0;
 
   const getScoreColor = () => {
     if (positivePercent >= 70) return "text-green-500";
@@ -120,13 +123,15 @@ const ReviewSection = ({ movieId, onReviewChange }) => {
           </div>
 
           <div className="bg-gray-800/80 p-6 rounded-xl border border-gray-700 flex flex-col justify-center px-8">
-            <div className="flex justify-between text-xs mb-2 font-bold uppercase tracking-tighter">
+            <div className="flex justify-between text-[10px] mb-2 font-bold uppercase tracking-tighter">
               <span className="text-green-400">Pos ({positiveCount})</span>
+              <span className="text-gray-400">Neu ({neutralCount})</span>
               <span className="text-red-400">Neg ({negativeCount})</span>
             </div>
             <div className="w-full bg-gray-900 h-4 rounded-full overflow-hidden flex border border-gray-700">
               <div className="bg-green-500 h-full transition-all duration-1000" style={{ width: `${positivePercent}%` }} />
-              <div className="bg-red-500 h-full transition-all duration-1000" style={{ width: `${100 - positivePercent}%` }} />
+              <div className="bg-gray-500 h-full transition-all duration-1000" style={{ width: `${neutralPercent}%` }} />
+              <div className="bg-red-500 h-full transition-all duration-1000" style={{ width: `${negativePercent}%` }} />
             </div>
           </div>
         </div>
@@ -193,9 +198,14 @@ const ReviewSection = ({ movieId, onReviewChange }) => {
                       ))}
                     </div>
                     {r.sentiment && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${r.sentiment === 'pos' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                          r.sentiment === 'pos' ? 'bg-green-500/20 text-green-400' : 
+                          r.sentiment === 'neutral' ? 'bg-gray-500/20 text-gray-400' :
+                          'bg-red-500/20 text-red-400'
                         }`}>
-                        {r.sentiment === 'pos' ? '😊 Positive' : '😞 Negative'}
+                        {r.sentiment === 'pos' ? '😊 Positive' : 
+                         r.sentiment === 'neutral' ? '😐 Neutral' : 
+                         '😞 Negative'}
                       </span>
                     )}
                   </div>
