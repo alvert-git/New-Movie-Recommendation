@@ -113,18 +113,24 @@ def personalized_recommend():
         cursor.execute("SELECT movie_id, interaction_type FROM user_interactions WHERE user_id = %s", (user_id,))
         interactions = cursor.fetchall()
         
-        if not interactions:
+        # 2. Fetch user reviews with positive sentiment
+        cursor.execute("SELECT movie_id, sentiment FROM reviews WHERE user_id = %s AND sentiment = 'pos'", (user_id,))
+        pos_reviews = cursor.fetchall()
+        
+        if not interactions and not pos_reviews:
             conn.close()
             return jsonify({"recommendations": get_trending_ids()})
 
-        # 2. Define weights
-        weights = {'PURCHASE': 5, 'WATCHLIST': 4, 'VIEW': 1}
+        # 3. Define weights
+        weights = {'PURCHASE': 5, 'WATCHLIST': 4, 'VIEW': 1, 'POSITIVE_REVIEW': 6}
         
         movie_scores = {} # index -> cumulative score
         interacted_movie_ids = set([int(i['movie_id']) for i in interactions])
+        # Also include movies reviewed in the set to avoid recommending them again
+        for r in pos_reviews:
+            interacted_movie_ids.add(int(r['movie_id']))
         
-        # 3. Calculate scores based on content similarity
-        # Iterate over each interaction to find similar movies
+        # 4. Calculate scores based on interactions
         for interact in interactions:
             m_id = int(interact['movie_id'])
             m_type = interact['interaction_type']
@@ -144,13 +150,29 @@ def personalized_recommend():
                 if i not in movie_scores:
                     movie_scores[i] = 0
                 movie_scores[i] += score * weight
+
+        # 5. Calculate scores based on positive reviews (New Feature)
+        for review in pos_reviews:
+            m_id = int(review['movie_id'])
+            weight = weights['POSITIVE_REVIEW']
+            
+            match = movies[movies['movie_id'] == m_id]
+            if match.empty:
+                continue
+            idx = match.index[0]
+            
+            sim_scores = similarity[idx]
+            for i, score in enumerate(sim_scores):
+                if i not in movie_scores:
+                    movie_scores[i] = 0
+                movie_scores[i] += score * weight
         
         conn.close()
         
-        # 4. Sort by score
+        # 6. Sort by score
         sorted_indices = sorted(movie_scores.items(), key=lambda x: x[1], reverse=True)
         
-        # 5. Filter out already interacted movies and limit results
+        # 7. Filter out already interacted movies and limit results
         recommended_ids = []
         for i, score in sorted_indices:
             movie_id = int(movies.iloc[i].movie_id)

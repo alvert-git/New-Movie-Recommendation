@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaStar, FaTrash, FaEdit } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import axios from "axios";
 import API from "../../api/axios";
 
 const ReviewSection = ({ movieId, onReviewChange }) => {
@@ -63,6 +64,26 @@ const ReviewSection = ({ movieId, onReviewChange }) => {
 
     setIsSubmitting(true);
     try {
+      // --- AI SENTIMENT VALIDATION ---
+      try {
+        const aiCheck = await axios.post("http://localhost:5000/predict-sentiment", { review: text });
+        const sentiment = aiCheck.data.sentiment;
+
+        if (sentiment === "neg" && rating >= 4) {
+          if (!window.confirm("AI detects a negative sentiment in your review, but you've given a high rating. Do you still want to proceed?")) {
+            setIsSubmitting(false);
+            return;
+          }
+        } else if (sentiment === "pos" && rating <= 2) {
+          if (!window.confirm("AI detects a positive sentiment in your review, but you've given a low rating. Do you still want to proceed?")) {
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Sentiment check bypassed due to connection error.");
+      }
+
       if (editId) {
         await API.put(`/reviews/${editId}`, { rating, review_text: text });
       } else {
