@@ -49,8 +49,42 @@ const AdminMovieForm = ({ movie, close }) => {
         setFiles({ ...files, [e.target.name]: e.target.files[0] });
     };
 
+    const handleNumericKeyDown = (e) => {
+        // Prevent 'e', '-', '+', and '.' if not needed (price needs '.')
+        if (['e', '-', '+'].includes(e.key)) {
+            e.preventDefault();
+        }
+    };
+
+    const handleNoZeroInput = (e) => {
+        if (e.target.value === '0') {
+            e.target.value = '';
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Additional Validations
+        const numberRegex = /\d/;
+        if (numberRegex.test(formData.genres)) {
+            alert("Genres cannot contain numbers.");
+            return;
+        }
+        if (numberRegex.test(formData.cast)) {
+            alert("Cast cannot contain numbers.");
+            return;
+        }
+        if (numberRegex.test(formData.crew)) {
+            alert("Crew cannot contain numbers.");
+            return;
+        }
+
+        if (Number(formData.runtime) <= 0 || Number(formData.budget) <= 0 || Number(formData.price) <= 0) {
+            alert("Runtime, Budget, and Price must be greater than zero.");
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -101,47 +135,47 @@ const AdminMovieForm = ({ movie, close }) => {
                         </div>
                         {/* Tagline */}
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Tagline</label>
-                            <input type="text" name="tagline" value={formData.tagline} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Your mind is the scene of the crime." />
+                            <label className="text-xs uppercase font-bold text-gray-500">Tagline <span className="text-red-500">*</span></label>
+                            <input type="text" name="tagline" required value={formData.tagline} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Your mind is the scene of the crime." />
                         </div>
                     </div>
 
                     <div className="space-y-2 text-left">
-                        <label className="text-xs uppercase font-bold text-gray-500">Overview</label>
-                        <textarea name="overview" rows="3" value={formData.overview} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition resize-none" placeholder="A thief who steals corporate secrets..." />
+                        <label className="text-xs uppercase font-bold text-gray-500">Overview <span className="text-red-500">*</span></label>
+                        <textarea name="overview" rows="3" required value={formData.overview} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition resize-none" placeholder="A thief who steals corporate secrets..." />
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Runtime (min)</label>
-                            <input type="number" name="runtime" value={formData.runtime} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="148" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Runtime (min) <span className="text-red-500">*</span></label>
+                            <input type="number" name="runtime" required min="1" onKeyDown={handleNumericKeyDown} onInput={handleNoZeroInput} value={formData.runtime} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="148" />
                         </div>
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Release Date</label>
-                            <input type="date" name="release_date" value={formData.release_date} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Release Date <span className="text-red-500">*</span></label>
+                            <input type="date" name="release_date" required value={formData.release_date} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" />
                         </div>
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Budget ($)</label>
-                            <input type="number" name="budget" value={formData.budget} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="160000000" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Budget Rs.<span className="text-red-500">*</span></label>
+                            <input type="number" name="budget" required min="1" onKeyDown={handleNumericKeyDown} onInput={handleNoZeroInput} value={formData.budget} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="160000000" />
                         </div>
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Price ($)</label>
-                            <input type="number" step="0.01" name="price" value={formData.price} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="9.99" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Price ($) <span className="text-red-500">*</span></label>
+                            <input type="number" step="0.01" name="price" required min="0.01" onKeyDown={(e) => { if (['e', '-', '+'].includes(e.key)) e.preventDefault(); }} onInput={handleNoZeroInput} value={formData.price} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="9.99" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Genres (Comma separated)</label>
-                            <input type="text" name="genres" value={formData.genres} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Action, Thriller, Sci-Fi" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Genres (Comma separated) <span className="text-red-500">*</span></label>
+                            <input type="text" name="genres" required value={formData.genres} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Action, Thriller, Sci-Fi" />
                         </div>
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Cast (Top 3 Comma separated)</label>
-                            <input type="text" name="cast" value={formData.cast} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Leo DiCaprio, Elliot Page..." />
+                            <label className="text-xs uppercase font-bold text-gray-500">Cast (Top 3 Comma separated) <span className="text-red-500">*</span></label>
+                            <input type="text" name="cast" required value={formData.cast} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Leo DiCaprio, Elliot Page..." />
                         </div>
                         <div className="space-y-2 text-left">
-                            <label className="text-xs uppercase font-bold text-gray-500">Crew / Director</label>
-                            <input type="text" name="crew" value={formData.crew} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Christopher Nolan" />
+                            <label className="text-xs uppercase font-bold text-gray-500">Crew / Director <span className="text-red-500">*</span></label>
+                            <input type="text" name="crew" required value={formData.crew} onChange={handleInputChange} className="w-full bg-zinc-900 border border-zinc-800 rounded px-4 py-3 focus:border-red-500 focus:outline-none text-white text-sm transition" placeholder="Christopher Nolan" />
                         </div>
                     </div>
 

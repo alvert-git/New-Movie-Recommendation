@@ -9,6 +9,14 @@ const Register = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
+
+        // Password Validation: 8+ chars and one uppercase
+        const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            alert("Password must be at least 8 characters long and contain at least one uppercase letter.");
+            return;
+        }
+
         try {
             await API.post('/auth/register', { email, password });
             alert("Success! Your seat is reserved.");

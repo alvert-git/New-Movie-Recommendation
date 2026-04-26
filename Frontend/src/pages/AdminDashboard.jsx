@@ -44,12 +44,12 @@ const AdminDashboard = () => {
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this movie?")) return;
         try {
-           await API.delete(`/movies/${id}`);
-           fetchMovies(searchQuery);
-           alert("Movie deleted. NLP model is updating in background.");
+            await API.delete(`/movies/${id}`);
+            fetchMovies(searchQuery);
+            alert("Movie deleted. NLP model is updating in background.");
         } catch (err) {
-           console.error(err);
-           alert("Failed to delete.");
+            console.error(err);
+            alert("Failed to delete.");
         }
     };
 
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
     return (
         <div className="pt-28 pb-16 min-h-screen bg-black text-white px-6">
             <div className="max-w-7xl mx-auto space-y-12">
-                
+
                 {/* Header & Rebuild Action */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
                         </h1>
                         <p className="text-gray-400 mt-1">Manage global movie platform settings.</p>
                     </div>
-                    <button 
+                    <button
                         onClick={handleManualRebuild}
                         className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 hover:border-red-500 transition px-5 py-2.5 rounded-lg font-medium shadow-2xl"
                     >
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
                         <div className="relative z-10">
                             <h3 className="text-gray-400 font-medium tracking-wider text-sm mb-2">GLOBAL REVENUE</h3>
                             <p className="text-5xl font-black text-white tracking-tight">
-                                ${Number(earnings.totalEarnings).toLocaleString()}
+                                Rs.{Number(earnings.totalEarnings).toLocaleString()}
                             </p>
                             <p className="text-emerald-400 text-sm mt-4 font-semibold flex items-center gap-1">
                                 <Activity className="w-4 h-4" /> Lifetime Earnings
@@ -120,19 +120,19 @@ const AdminDashboard = () => {
                 <div className="bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
                     <div className="p-6 border-b border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <h2 className="text-2xl font-bold">Content Library</h2>
-                        
+
                         <div className="flex items-center gap-4">
                             <div className="relative">
                                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                                <input 
-                                    type="text" 
-                                    placeholder="Search library..." 
+                                <input
+                                    type="text"
+                                    placeholder="Search library..."
                                     value={searchQuery}
                                     onChange={handleSearch}
                                     className="bg-zinc-900 border border-zinc-700 text-sm rounded-lg pl-10 pr-4 py-2 w-64 focus:ring-1 focus:ring-red-500 focus:outline-none"
                                 />
                             </div>
-                            <button 
+                            <button
                                 onClick={() => { setEditingMovie(null); setIsModalOpen(true); }}
                                 className="flex items-center gap-2 bg-red-600 hover:bg-red-700 transition text-white px-5 py-2.5 rounded-lg font-bold shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                             >
@@ -165,7 +165,7 @@ const AdminDashboard = () => {
                                             <td className="py-4 px-6 font-semibold">{m.title}</td>
                                             <td className="py-4 px-6 text-gray-500 font-mono text-sm">{m.movie_id}</td>
                                             <td className="py-4 px-6 text-right space-x-3">
-                                                <button 
+                                                <button
                                                     onClick={async () => {
                                                         const res = await API.get(`/movies/${m.movie_id}`);
                                                         setEditingMovie(res.data);
@@ -175,7 +175,7 @@ const AdminDashboard = () => {
                                                 >
                                                     <Edit className="w-4 h-4" />
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDelete(m.movie_id)}
                                                     className="p-2 bg-red-950/30 text-red-500 hover:bg-red-900/50 hover:text-red-400 rounded-lg transition"
                                                 >
@@ -191,9 +191,9 @@ const AdminDashboard = () => {
                 </div>
 
                 {isModalOpen && (
-                    <AdminMovieForm 
-                        movie={editingMovie} 
-                        close={() => { setIsModalOpen(false); fetchMovies(searchQuery); }} 
+                    <AdminMovieForm
+                        movie={editingMovie}
+                        close={() => { setIsModalOpen(false); fetchMovies(searchQuery); }}
                     />
                 )}
             </div>
